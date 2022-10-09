@@ -1,0 +1,90 @@
+---
+title: "Project 1"
+author: "Kevin Kuc"
+date: "2022-10-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(gapminder)
+library(tinytex)
+library(MASS)
+library(gridExtra)
+diamonds4 <- read.csv(file = 'diamonds4.csv')
+```
+#clarity, carat, color, cut, price
+```{r fig2, fig.height = 3, fig.width = 3, fig.align = "center"} #shrink or expand plots
+diamonds5<-diamonds4 %>% 
+  group_by(cut) %>% 
+  filter(price<10000)
+ggplot(diamonds5, aes(x = reorder(cut, -price), y = price)) +
+    geom_boxplot(fill = "Blue", color = "Brown") +
+    labs(title = "Distributions of Price by Cut")+
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 0))
+ggplot(diamonds5, aes(x = reorder(color,-price), y = price)) +
+    geom_boxplot(fill = "Blue", color = "Brown") +
+    labs(title = "Distributions of Price by Color")+
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 0))
+ggplot(diamonds5, aes(x = reorder(clarity,-price), y = price)) +
+    geom_boxplot(fill = "Blue", color = "Brown") +
+    labs(title = "Distributions of Price by Clarity")+
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 0))
+```
+```{r}
+result<-lm(price~carat, data=diamonds4)
+summary(result)
+yhat<-result$fitted.values
+res<-result$residuals
+diamonds6<-data.frame(diamonds4,yhat,res)
+diamonds6$carat<-log(diamonds6$carat)
+diamonds6$price<-log(diamonds6$price)
+plot1<-ggplot(diamonds6, aes(x=yhat,y=res))+
+  geom_point()+
+  geom_hline(yintercept=0, color="red")+
+  labs(x="Fitted y",
+       y="Residuals",
+       title="Residual Plot")
+plot2<-ggplot(diamonds6, aes(x = carat, y = price)) +
+    geom_point()+
+    geom_smooth(method="lm", se=FALSE)+
+    labs(title = "Distributions of Price by Cut")+
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 0))
+require(gridExtra) #side by side plots
+grid.arrange(plot1, plot2, ncol=2) 
+```
+
+
+```{r}
+ggplot(diamonds5, aes(x=carat, y=price, fill=reorder(cut,-price)))+
+   geom_point(shape=21, alpha=0.5)
+ggplot(diamonds5, aes(x=carat, y=price, fill=color))+
+   geom_point(shape=21, alpha=0.5)
+ggplot(diamonds5, aes(x=carat, y=price, fill=clarity))+
+   geom_point(shape=21, alpha=0.5)
+```
+```{r}
+diamonds4$cut<-factor(diamonds4$cut, levels=c("Ideal","Very Good","Good", "Astor Ideal"))
+levels(diamonds4$cut)
+mytab<-table(diamonds4$cut)
+mytab
+ggplot(diamonds4, aes(x=cut))+
+  geom_bar()
+```
+
+#diamond color based on cut
+```{r}
+#diamonds7<-diamonds7[,0:3]
+#newdata<-diamonds7 %>% 
+  #group_by(color) %>% 
+  #filter(price<10000) %>% 
+  #summarize(Counts=n())%>%
+  #mutate(Percent=Counts/sum(Counts))
+mytab<-table(diamonds4$cut,diamonds4$color)
+round(prop.table(mytab,margin=2)*100,1)
+```
+
